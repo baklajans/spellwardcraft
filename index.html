@@ -15,10 +15,16 @@
   <div class="max-w-7xl mx-auto px-8 py-10 space-y-8">
     <header class="glass rounded-2xl p-6 shadow-xl">
       <div class="flex flex-col gap-4">
+       <div class="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p class="uppercase text-xs tracking-[0.3em] text-slate-400">Spellward Craft</p>
           <h1 class="text-3xl font-bold text-white mt-1">Калькулятор крафта</h1>
           <p class="text-sm text-slate-300 mt-2">Редактируйте цены базовых ресурсов, добавляйте предметы в корзину, считайте затраты и итог в ревентах. Глобальная наценка применяется только к готовым предметам.</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="exportBtn" class="px-4 py-2 rounded-full text-sm bg-slate-800/70 border border-slate-700 text-slate-200 hover:bg-slate-700 transition">Экспорт цен в буфер обмена</button>
+            <span id="exportStatus" class="text-xs text-slate-400 min-w-[140px]"></span>
+          </div>
         </div>
       </div>
     </header>
@@ -100,13 +106,15 @@
     </section>
 
     <section class="glass rounded-2xl p-6 space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
         <h2 class="text-xl font-semibold">Каталог</h2>
+        <div class="flex items-center gap-2 flex-wrap">
         <div class="flex items-center bg-slate-900/60 border border-slate-700 rounded-full p-1 gap-1 flex-wrap">
           <button data-tab="armor" class="tab-btn px-3 py-1 rounded-full text-sm bg-emerald-500 text-slate-900 font-semibold">Броня</button>
           <button data-tab="weapon" class="tab-btn px-3 py-1 rounded-full text-sm text-slate-300">Оружие</button>
           <button data-tab="tool" class="tab-btn px-3 py-1 rounded-full text-sm text-slate-300">Инструменты</button>
           <button data-tab="inter" class="tab-btn px-3 py-1 rounded-full text-sm text-slate-300">Промежуточные</button>
+          </div>
         </div>
       </div>
       <div id="tabArmor" class="space-y-2 text-sm"></div>
@@ -302,6 +310,42 @@
         tbody.appendChild(row);
       });
       target.appendChild(tableWrap);
+    }
+
+    function exportPriceList() {
+      const markup = getMarkup();
+      const roundUp = isRoundUp();
+      const priceWithSettings = (baseCost) => {
+        let v = baseCost * (1 + markup / 100);
+        if (roundUp) v = Math.ceil(v);
+        return v;
+      };
+
+      const lines = [];
+      const addSection = (title, data) => {
+        lines.push(title);
+        Object.entries(data).forEach(([name]) => {
+          const { baseCost } = computeRequirements(name, 1);
+          const price = priceWithSettings(baseCost);
+          lines.push(`- ${name}: ${fmt(price)} рев.`);
+        });
+        lines.push('');
+      };
+      addSection('Броня', armorItems);
+      addSection('Оружие', weaponItems);
+      addSection('Инструменты', toolItems);
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        const status = document.getElementById('exportStatus');
+        status.textContent = 'Скопировано!';
+        status.className = 'text-xs text-emerald-400';
+        setTimeout(() => { status.textContent = ''; }, 2500);
+      }).catch(() => {
+        const status = document.getElementById('exportStatus');
+        status.textContent = 'Не удалось скопировать';
+        status.className = 'text-xs text-red-400';
+        setTimeout(() => { status.textContent = ''; }, 2500);
+      });
     }
 
     function renderInterTable() {
@@ -580,6 +624,8 @@
           containers[tab]?.classList.remove('hidden');
         });
       });
+      const exportBtn = document.getElementById('exportBtn');
+      if (exportBtn) exportBtn.addEventListener('click', exportPriceList);
     }
 
     function parseIngredients(text) {
