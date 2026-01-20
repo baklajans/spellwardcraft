@@ -15,7 +15,8 @@
 
 ## Запуск
 Для локального запуска достаточно скачать index.html и открыть в браузере, интернет не нужен.
-Страницка на github pages --> https://baklajans.github.io/spellwardcraft/
+
+Страничка на github pages --> https://baklajans.github.io/spellwardcraft/
 
 
 ## Использование
