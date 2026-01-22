@@ -270,10 +270,27 @@
         card.querySelector('input').addEventListener('input', (e) => {
           const v = parseFloat(e.target.value || '0');
           baseResourceData[name] = isNaN(v) ? 0 : v;
+          savePrices();
           updateAll();
         });
         wrap.appendChild(card);
       });
+    }
+
+    function savePrices() {
+      localStorage.setItem('baseResourceData', JSON.stringify(baseResourceData));
+    }
+
+    function loadPrices() {
+      const saved = localStorage.getItem('baseResourceData');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach(key => {
+          if (baseResourceData.hasOwnProperty(key)) {
+            baseResourceData[key] = parsed[key];
+          }
+        });
+      }
     }
 
     function renderReadyTable(targetId, data) {
@@ -735,6 +752,7 @@
     }
 
     function init() {
+      loadPrices();
       renderLists();
       renderAddCards('', currentAddCategory);
       bindMarkup();
